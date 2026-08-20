@@ -544,6 +544,36 @@ function ApiKeysSection({ systemId }: ApiKeysSectionProps) {
   const [editName, setEditName] = useState('');
   const [pendingRevoke, setPendingRevoke] = useState<ApiKeyDto | null>(null);
   const [issued, setIssued] = useState<IssuedApiKeyDto | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (text: string) => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const successful = document.execCommand('copy');
+        textArea.remove();
+        if (successful) {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        } else {
+          console.error('Fallback: Copy command was unsuccessful');
+        }
+      }
+    } catch (err) {
+      console.error('Failed to copy', err);
+    }
+  };
 
   const refresh = () => {
     listApiKeys(systemId).then(setApiKeys);
@@ -630,9 +660,37 @@ function ApiKeysSection({ systemId }: ApiKeysSectionProps) {
           <p>
             Copy this token now — for security, it's shown only this once and can't be retrieved again.
           </p>
-          <code style={{ display: 'block', wordBreak: 'break-all', padding: '0.75rem', background: 'var(--border)', borderRadius: 6 }}>
-            {issued.token}
-          </code>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--border)', padding: '0.75rem', borderRadius: 6 }}>
+            <code style={{ flex: 1, wordBreak: 'break-all' }}>
+              {issued.token}
+            </code>
+            <button
+              type="button"
+              onClick={() => void handleCopy(issued.token)}
+              title={copied ? "Copied!" : "Copy to clipboard"}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: copied ? '#10b981' : 'inherit'
+              }}
+            >
+              {copied ? (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M20 6L9 17l-5-5"></path>
+                </svg>
+              ) : (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+              )}
+            </button>
+          </div>
           <div style={{ marginTop: '1rem', textAlign: 'right' }}>
             <button type="button" onClick={() => setIssued(null)}>
               Done
