@@ -1,0 +1,61 @@
+spring:
+  application:
+    name: configuration-manager-backend
+
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+
+  datasource:
+    # allowPublicKeyRetrieval is required for MySQL 8's default caching_sha2_password auth plugin
+    # when not using SSL — without it, the client can't fetch the server's RSA key to encrypt the
+    # password and the connection is rejected outright ("Public Key Retrieval is not allowed").
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:secretmanager}?useSSL=${DB_USE_SSL:false}&allowPublicKeyRetrieval=${DB_ALLOW_PUBLIC_KEY_RETRIEVAL:true}&serverTimezone=UTC
+    username: ${SM_DB_USERNAME:}
+    password: ${SM_DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # Schema is owned by the SQL scripts under /database — never let Hibernate mutate it.
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+
+server:
+  port: ${SM_SERVER_PORT:8089}
+
+configuration-manager:
+  # Comma-separated list of origins allowed to call this API with credentials.
+  cors:
+    allowed-origins: ${SM_CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:5174,http://local.configurationmanager.alwaysmoveforward.com:5173,http://local.configurationmanager.alwaysmoveforward.com:5174}
+
+  frontend:
+    base-url: ${SM_FRONTEND_BASE_URL:http://local.configurationmanager.alwaysmoveforward.com:5173}
+
+  auth0:
+    domain: ${SM_AUTH0_DOMAIN:alwaysmoveforward.auth0.com}
+    client-id: ${SM_AUTH0_CLIENT_ID:}
+    client-secret: ${SM_AUTH0_CLIENT_SECRET:}
+    callback-url: ${SM_AUTH0_CALLBACK_URL:http://api.configurationmanager.alwaysmoveforward.com:8089/api/auth/callback}
+    audience: ${SM_AUTH0_AUDIENCE:}
+    logout-url: ${SM_LOGOUT_URL:http://api.configurationmanager.alwaysmoveforward.com:8089}
+
+  jwt:
+    # Base64-encoded HMAC-SHA256 key, minimum 256 bits. Generate with: openssl rand -base64 32
+    signing-key: ${JWT_SIGNING_KEY:}
+    expiration-minutes: ${JWT_EXPIRATION_MINUTES:480}
+    cookie-name: ${JWT_COOKIE_NAME:ConfigurationManagerAuth}
+    cookie-secure: ${JWT_COOKIE_SECURE:true}
+    cookie-domain: ${JWT_COOKIE_DOMAIN:configurationmanager.alwaysmoveforward.com}
+
+  encryption:
+    # Base64-encoded AES-256 key (32 bytes). Generate with: openssl rand -base64 32
+    key: ${SECRET_ENCRYPTION_KEY:}
+    key-version: ${SECRET_ENCRYPTION_KEY_VERSION:1}
+
+logging:
+  level:
+    root: ERROR
+    com.alwaysmoveforward.configurationmanager: ERROR

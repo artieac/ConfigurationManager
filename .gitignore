@@ -22,3 +22,18 @@
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 replay_pid*
+
+# Maven
+backend/target/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Local env files that may carry real secrets (Auth0/JWT/encryption keys, DB creds)
+.env
+.env.local
+*.env.local
+backend/src/main/resources/application-local.yml
+backend/src/main/resources/application-production.yml
